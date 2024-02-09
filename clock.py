@@ -7,27 +7,32 @@ import subprocess
 finland_timezone = timezone('Europe/Helsinki')
 
 def my_task():
-    # Put your task logic here
-    print('starting table.py')
+    # Run table.py using subprocess
     subprocess.run(['python', 'table.py'])
+
+def start_task():
+    # Run the task immediately
+    print("Starting task...")
+    my_task()
+
+def stop_task():
+    # Stop the task
+    print("Stopping task...")
+    scheduler.remove_all_jobs()
 
 # Create a scheduler
 scheduler = BlockingScheduler(timezone=finland_timezone)
 
-# Define the job
-scheduler.add_job(
-    my_task,
-    'cron',
-    #day_of_week='mon-fri',  # Run on weekdays
-    hour='*'#,             # Run from 9 AM to 10 PM
-    #minute='0',              # Run at the beginning of the hour
-)
+# Schedule start and stop tasks
+scheduler.add_job(start_task, 'date')
+scheduler.add_job(stop_task, 'cron', day_of_week='mon-fri', hour='22', minute='0')
+scheduler.add_job(stop_task, 'cron', day_of_week='mon-fri', hour='23', minute='0')
+scheduler.add_job(stop_task, 'cron', day_of_week='mon-fri', hour='0', minute='0')
+scheduler.add_job(stop_task, 'cron', day_of_week='sat-sun', hour='*', minute='0')
 
 try:
     # Start the scheduler
-    print('Scheduler starting.')
     scheduler.start()
-    print('Scheduler started.')
 except KeyboardInterrupt:
     # Stop the scheduler if Ctrl+C is pressed
     pass
