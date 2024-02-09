@@ -1,10 +1,9 @@
 import discord
 from discord.ext import commands
 import texttable
-
-# IMPORT THE OS MODULE.
 import os
-
+#import openai
+from openai import OpenAI
 # IMPORT LOAD_DOTENV FUNCTION FROM DOTENV MODULE.
 from dotenv import load_dotenv
 
@@ -13,6 +12,9 @@ load_dotenv()
 
 # GRAB THE API TOKEN FROM THE .ENV FILE.
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+CHAT_GPT_API = os.getenv("CHAT_GPT_API")
+#openai.api_key = CHAT_GPT_API
+openai = OpenAI(api_key=CHAT_GPT_API)
 
 # Prefix for bot commands
 #bot = commands.Bot(command_prefix='/')
@@ -62,9 +64,56 @@ async def on_message(message):
 def markdown_to_ascii(rows):
     # Convert Markdown table to ASCII table
     table = texttable.Texttable()
-    for row in rows:
-        table.add_row([cell.strip() for cell in row])
+    table.header(["Ord", "Translation", "bestamd", "Exampel"])
+    for idx, row in enumerate(rows):
+        if row:
+            # Get the value of the first cell
+            first_cell = row[0].strip()
+
+            row.append(get_swedish_bestamd(first_cell))
+            row.append(get_swedish_sentence(first_cell))
+            table.add_row([cell.strip() for cell in row])
+        else:
+            table.add_row([])
     return table.draw()
+
+def get_swedish_sentence(word):
+    try:
+        prompt = f"Use this word '{word}' in Swedish,  in a very simple sentence must be less than 20 word."
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo-0125",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        if response:
+            #return response['choices'][0]['message']['content'].strip()
+            return response.choices[0].message.content.strip()
+        else:
+            return "Sorry, I couldn't generate a sentence with that word."
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return ""
+
+def get_swedish_bestamd(word):
+    try:
+        prompt = f"What is Bestämd form of the word '{word}' in Swedish, give short straightforward 1,2 word answer"
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo-0125",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        if response:
+            #return response['choices'][0]['message']['content'].strip()
+            return response.choices[0].message.content.strip()
+        else:
+            return "Error"
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return ""
 
 bot.run(DISCORD_TOKEN)
 
