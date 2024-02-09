@@ -1,6 +1,7 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime, time
 from pytz import timezone
+import subprocess
 
 # Define the timezone
 finland_timezone = timezone('Europe/Helsinki')
