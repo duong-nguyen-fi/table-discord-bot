@@ -64,7 +64,7 @@ async def on_message(message):
 def markdown_to_ascii(rows):
     # Convert Markdown table to ASCII table
     table = texttable.Texttable()
-    table.header(["Ord", "Translation", "bestamd", "Exampel"])
+    table.header(["Ord", "Translation", "Bestämd", "Exampel"])
     for idx, row in enumerate(rows):
         if row:
             row[0] = verify_swedish_word(row[0].strip())
