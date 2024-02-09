@@ -81,7 +81,7 @@ def markdown_to_ascii(rows):
 
 def get_swedish_sentence(word):
     try:
-        prompt = f"Use this word '{word}' in Swedish,  in a very simple sentence must be less than 20 word, and translate it in parenthesises"
+        prompt = f"Use this word '{word}' in Swedish,  in a very simple sentence must be less than 20 word. It must be grammarly correct in Swedish. And translate it in parenthesises"
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
@@ -138,7 +138,7 @@ def get_swedish_translation(word):
         
 def verify_swedish_word(word):
     try:
-        prompt = f"Use this Swedish word '{word}'  Correct the word if there is speeling mistake. Make sure it is grammarly corret in Swedish, if you were to say '1 {word}' in word, print out the word with correct 'ett' or 'en' form without additional context (only 2 words), for example 'ett öga'. Remove all non-alphanumeric characters. All lowercase"
+        prompt = f"Use this Swedish word '{word}'  Correct the word if there is speeling mistake. it must be grammarly correct in Swedish, if you were to say '1 {word}' in a word, print out the word with correct 'ett' or 'en' form without additional context (only 2 words), for example 'ett öga'. Remove all non-alphanumeric characters. All lowercase"
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
