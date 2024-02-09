@@ -7,6 +7,7 @@ finland_timezone = timezone('Europe/Helsinki')
 
 def my_task():
     # Put your task logic here
+    print('starting table.py')
     subprocess.run(['python', 'table.py'])
 
 # Create a scheduler
@@ -23,7 +24,9 @@ scheduler.add_job(
 
 try:
     # Start the scheduler
+    print('Scheduler starting.')
     scheduler.start()
+    print('Scheduler started.')
 except KeyboardInterrupt:
     # Stop the scheduler if Ctrl+C is pressed
     pass
