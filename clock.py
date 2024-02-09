@@ -18,9 +18,9 @@ scheduler = BlockingScheduler(timezone=finland_timezone)
 scheduler.add_job(
     my_task,
     'cron',
-    day_of_week='mon-fri',  # Run on weekdays
-    hour='9-22',             # Run from 9 AM to 10 PM
-    minute='0',              # Run at the beginning of the hour
+    #day_of_week='mon-fri',  # Run on weekdays
+    hour='*'#,             # Run from 9 AM to 10 PM
+    #minute='0',              # Run at the beginning of the hour
 )
 
 try:
