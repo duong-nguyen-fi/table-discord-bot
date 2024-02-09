@@ -7,7 +7,7 @@ finland_timezone = timezone('Europe/Helsinki')
 
 def my_task():
     # Put your task logic here
-    print("Running my task at", datetime.now(finland_timezone))
+    subprocess.run(['python', 'table.py'])
 
 # Create a scheduler
 scheduler = BlockingScheduler(timezone=finland_timezone)
