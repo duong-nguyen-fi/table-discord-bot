@@ -138,7 +138,7 @@ def get_swedish_translation(word):
         
 def verify_swedish_word(word):
     try:
-        prompt = f"Use this Swedish word '{word}'  Correct the word if incorrect. Make sure it is grammarly corret in Swedish, print out the word with correct 'ett' or 'en' form without additional context (only 2 words), for example 'ett öga'"
+        prompt = f"Use this Swedish word '{word}'  Correct the word if incorrect. Make sure it is grammarly corret in Swedish, if you were to say '1 {word}' in word, print out the word with correct 'ett' or 'en' form without additional context (only 2 words), for example 'ett öga'. Remove all quote characters"
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
