@@ -100,7 +100,7 @@ def get_swedish_sentence(word):
 
 def get_swedish_bestamd(word):
     try:
-        prompt = f"What is Bestämd form of the word '{word}' in Swedish, give short straightforward 1,2 word answer"
+        prompt = f"What is Bestämd form of the word '{word}' in Swedish, give short straightforward 1,2 word answer, remove all quote characters"
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
@@ -119,7 +119,7 @@ def get_swedish_bestamd(word):
 
 def get_swedish_translation(word):
     try:
-        prompt = f"What is translation of this Swedish word '{word}' in English, give short straightforward 1,2 word answer"
+        prompt = f"What is translation of this Swedish word '{word}' in English, give short straightforward 1,2 word answer, remove all quote characters"
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
@@ -138,7 +138,7 @@ def get_swedish_translation(word):
         
 def verify_swedish_word(word):
     try:
-        prompt = f"Use this Swedish word '{word}',  'ett {word}' or'en {word}' with its correction if needed:  Give short straightforward 2 word answer in 1 line. Just tell me the correct word."
+        prompt = f"Use this Swedish word '{word}',  'ett {word}' or'en {word}' with its correction if needed:  Give short straightforward 2 word answer in 1 line. Just tell me the correct word. remove all quote characters"
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
