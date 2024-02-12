@@ -65,9 +65,11 @@ async def process_message(message):
 
         # Convert Markdown table to ASCII table
         tables, mp3_files = markdown_to_ascii(rows)
+        
         thread = await message.create_thread(name="make_tabler")
         # Reply with the ASCII table
         #await thread.send('```\n' + ascii_table + '```')
+        
         try:
             print('Sending tables')
             for table in tables:
@@ -85,6 +87,7 @@ async def process_message(message):
 
         except Exception as e:
             print("Something went wrong " + str(message.id) + str(e) )
+        
     await bot.process_commands(message)
 
 def markdown_to_ascii(rows):
@@ -93,14 +96,16 @@ def markdown_to_ascii(rows):
     tables = []
     table = texttable.Texttable()
     table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
-    table.set_deco(table.HEADER  | texttable.Texttable.HLINES)
+    table.set_deco(table.HEADER  | table.HLINES)
     for idx, row in enumerate(rows):
         if idx % MAX_ROWS_PER_TABLE == 0:
             # Create a new table for every MAX_ROWS_PER_TABLE rows
             if table._rows:
-                tables.append(table.draw())
-            table = texttable.Texttable()
-            table.set_deco( texttable.Texttable.HLINES)
+                s = table.draw()
+                #print(s)
+                tables.append(s)
+                table = texttable.Texttable()
+                table.set_deco( table.HEADER  |  table.HLINES)
             #table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
         if row:
             row[0] = verify_swedish_word(row[0].strip())
@@ -119,10 +124,10 @@ def markdown_to_ascii(rows):
             table.add_row([cell.strip() for cell in row])
             
             mp3_files.append(discord.File(create_audio(first_cell, bestamd, plural, sentence.split('.')[0])))
-        else:
-            table.add_row([])
     if table._rows:
-        tables.append(table.draw())
+        s = table.draw()
+        #print(s)
+        tables.append(s)
     return tables, mp3_files
 
 def get_swedish_sentence(word):
