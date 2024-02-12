@@ -29,7 +29,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="<" , intents=intents)
 
 
-# Maximum characters per embed
+# Maximum rows per table
 MAX_ROWS_PER_TABLE = 5
 
 @bot.event
@@ -59,9 +59,9 @@ async def process_message(message):
         return
 
     # Check if the message starts with '/table'
-    if message.content.startswith('/embed'):
+    if message.content.startswith('/table'):
         # Extract the content after '/table'
-        content = message.content[len('/embed'):].strip()
+        content = message.content[len('/table'):].strip()
         print("Message received from " + str(message.author) + ' id='+ str(message.id) + ' channel=' + str(message.guild))
         # Parse the content into rows
         rows = [line.strip().split(':') for line in content.split('\n')]
@@ -73,7 +73,6 @@ async def process_message(message):
         #await thread.send('```\n' + ascii_table + '```')
         try:
             print('Sending tables')
-            # Send each table as an embed to the thread
             for table in tables:
                 await thread.send('```\n' + table + '```')
             # Send mp3 files
