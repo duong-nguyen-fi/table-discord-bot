@@ -64,8 +64,12 @@ async def on_message(message):
 
         # Send mp3 files
         for mp3_file in mp3_files:
-            await thread.send(file=mp3_file)
-            os.remove(mp3_file.filename)
+            try:
+                await thread.send(file=mp3_file)
+            except:
+                print('fail to send file' + mp3_file.filename)
+            finally:
+                os.remove(mp3_file.filename)
     await bot.process_commands(message)
 
 
