@@ -27,8 +27,7 @@ bot = commands.Bot(command_prefix="<" , intents=intents)
 
 
 # Maximum rows per table
-MAX_ROWS_PER_TABLE = 5
-
+MAX_ROWS_PER_TABLE = os.getenv("MAX_ROWS_PER_TABLE")
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
