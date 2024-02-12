@@ -14,6 +14,7 @@ load_dotenv()
 # GRAB THE API TOKEN FROM THE .ENV FILE.
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 CHAT_GPT_API = os.getenv("CHAT_GPT_API")
+COMMAND_STRING = os.getenv("COMMAND_STRING")
 
 openai = OpenAI(api_key=CHAT_GPT_API)
 
@@ -55,9 +56,9 @@ async def process_message(message):
         return
 
     # Check if the message starts with '/table'
-    if message.content.startswith('/table'):
+    if message.content.startswith(f'/{COMMAND_STRING}'):
         # Extract the content after '/table'
-        content = message.content[len('/table'):].strip()
+        content = message.content[len(f'/{COMMAND_STRING}'):].strip()
         print("Message received from " + str(message.author) + ' id='+ str(message.id) + ' channel=' + str(message.guild))
         # Parse the content into rows
         rows = [line.strip().split(':') for line in content.split('\n')]
@@ -89,14 +90,14 @@ def markdown_to_ascii(rows):
     mp3_files = []
     tables = []
     table = texttable.Texttable()
-    table.header(["Ord", "Translation", "IPA", "Bestämd", "Exampel"])
+    table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
     for idx, row in enumerate(rows):
         if idx % MAX_ROWS_PER_TABLE == 0:
             # Create a new table for every MAX_ROWS_PER_TABLE rows
             if table._rows:
                 tables.append(table.draw())
             table = texttable.Texttable()
-            table.header(["Ord", "Translation", "IPA", "Bestämd", "Exampel"])
+            table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
         if row:
             row[0] = verify_swedish_word(row[0].strip())
             # Get the value of the first cell
@@ -105,6 +106,7 @@ def markdown_to_ascii(rows):
                 row.append(get_swedish_translation(first_cell))
             row.append(get_IPA_presentation(first_cell))
             row.append(get_swedish_bestamd(first_cell))
+            row.append(get_swedish_plural(first_cell))
             sentence = get_swedish_sentence(first_cell)
             row.append(sentence)
             table.add_row([cell.strip() for cell in row])
@@ -138,6 +140,25 @@ def get_swedish_sentence(word):
 def get_swedish_bestamd(word):
     try:
         prompt = f"What is Bestämd form of the word '{word}' in Swedish, give short straightforward 1,2 word answer, remove all quote characters"
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo-0125",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        if response:
+            #return response['choices'][0]['message']['content'].strip()
+            return response.choices[0].message.content.strip()
+        else:
+            return "Error"
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return ""
+
+def get_swedish_plural(word):
+    try:
+        prompt = f"What is plural form of the word '{word}' in Swedish, give short straightforward 1,2 word answer, remove all quote characters"
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
