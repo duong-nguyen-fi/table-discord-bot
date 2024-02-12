@@ -7,15 +7,19 @@ from openai import OpenAI
 # IMPORT LOAD_DOTENV FUNCTION FROM DOTENV MODULE.
 from dotenv import load_dotenv
 
+from elevenlabs import generate, play, set_api_key, save
+#from elevenlabs.client import ElevenLabs
+
 # LOADS THE .ENV FILE THAT RESIDES ON THE SAME LEVEL AS THE SCRIPT.
 load_dotenv()
 
 # GRAB THE API TOKEN FROM THE .ENV FILE.
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 CHAT_GPT_API = os.getenv("CHAT_GPT_API")
+ELEVENLABS_API = os.getenv("ELEVENLABS_API")
 #openai.api_key = CHAT_GPT_API
 openai = OpenAI(api_key=CHAT_GPT_API)
-
+#client = ElevenLabs(api_key=ELEVENLABS_API)
 # Prefix for bot commands
 #bot = commands.Bot(command_prefix='/')
 #bot = discord.Client(intents=discord.Intents.default())
@@ -53,18 +57,23 @@ async def on_message(message):
         rows = [line.strip().split(':') for line in content.split('\n')]
 
         # Convert Markdown table to ASCII table
-        ascii_table = markdown_to_ascii(rows)
-
+        ascii_table, mp3_files = markdown_to_ascii(rows)
+        thread = await message.create_thread(name="make_tabler", auto_archive_duration=1440)
         # Reply with the ASCII table
-        await message.channel.send('```\n' + ascii_table + '```')
+        await thread.send('```\n' + ascii_table + '```')
 
+        # Send mp3 files
+        for mp3_file in mp3_files:
+            await thread.send(file=mp3_file)
+            os.remove(mp3_file.filename)
     await bot.process_commands(message)
 
 
 def markdown_to_ascii(rows):
     # Convert Markdown table to ASCII table
+    mp3_files = []
     table = texttable.Texttable()
-    table.header(["Ord", "Translation", "Bestämd", "Exampel"])
+    table.header(["Ord", "Translation", "IPA", "Bestämd", "Exampel"])
     for idx, row in enumerate(rows):
         if row:
             row[0] = verify_swedish_word(row[0].strip())
@@ -72,12 +81,15 @@ def markdown_to_ascii(rows):
             first_cell = row[0].strip()
             if len(row) == 1:
                 row.append(get_swedish_translation(first_cell))
+            row.append(get_IPA_presentation(first_cell))
             row.append(get_swedish_bestamd(first_cell))
             row.append(get_swedish_sentence(first_cell))
             table.add_row([cell.strip() for cell in row])
+            
+            mp3_files.append(discord.File(create_audio(first_cell)))
         else:
             table.add_row([])
-    return table.draw()
+    return table.draw(), mp3_files
 
 def get_swedish_sentence(word):
     try:
@@ -154,6 +166,34 @@ def verify_swedish_word(word):
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         return ""
+
+def get_IPA_presentation(word):
+    try:
+        prompt = f"what is IPA presentatio of this Swedish word '{word}' . Short answer only. Remove all quote characters. All lowercase"
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo-0125",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        if response:
+            #return response['choices'][0]['message']['content'].strip()
+            return response.choices[0].message.content.strip()
+        else:
+            return "Error"
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return ""
+
+def create_audio(word):
+    voice = generate(
+    text=word,
+    voice="Bella",
+    model="eleven_multilingual_v2"
+    )
+    save(voice,f'{word}.mp3')
+    return word+'.mp3'
 
 bot.run(DISCORD_TOKEN)
 
