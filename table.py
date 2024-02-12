@@ -27,6 +27,11 @@ set_api_key(ELEVENLABS_API)
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="<" , intents=intents)
+
+
+# Maximum characters per embed
+MAX_ROWS_PER_TABLE = 5
+
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
@@ -45,41 +50,58 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    # Check if the edited message starts with '/table'
+    await process_message(message)
+
+async def process_message(message):
     # Ignore messages from the bot itself
     if message.author == bot.user:
         return
 
     # Check if the message starts with '/table'
-    if message.content.startswith('/table'):
+    if message.content.startswith('/embed'):
         # Extract the content after '/table'
-        content = message.content[len('/table'):].strip()
-
+        content = message.content[len('/embed'):].strip()
+        print("Message received from " + str(message.author) + ' id='+ str(message.id) + ' channel=' + str(message.guild))
         # Parse the content into rows
         rows = [line.strip().split(':') for line in content.split('\n')]
 
         # Convert Markdown table to ASCII table
-        ascii_table, mp3_files = markdown_to_ascii(rows)
-        thread = await message.create_thread(name="make_tabler", auto_archive_duration=1440)
+        tables, mp3_files = markdown_to_ascii(rows)
+        thread = await message.create_thread(name="make_tabler")
         # Reply with the ASCII table
-        await thread.send('```\n' + ascii_table + '```')
-
-        # Send mp3 files
-        for mp3_file in mp3_files:
-            try:
-                await thread.send(file=mp3_file)
-            except:
-                print('fail to send file' + mp3_file.filename)
-            finally:
-                os.remove(mp3_file.filename)
+        #await thread.send('```\n' + ascii_table + '```')
+        try:
+            print('Sending tables')
+            # Send each table as an embed to the thread
+            for table in tables:
+                await thread.send('```\n' + table + '```')
+            # Send mp3 files
+            print('Sending audios')
+            for mp3_file in mp3_files:
+                try:
+                    await thread.send(file=mp3_file)
+                except:
+                    print('fail to send file' + mp3_file.filename)
+                finally:
+                    os.remove(mp3_file.filename)
+        except:
+            print("Something went wrong " + str(message.id))
     await bot.process_commands(message)
-
 
 def markdown_to_ascii(rows):
     # Convert Markdown table to ASCII table
     mp3_files = []
+    tables = []
     table = texttable.Texttable()
     table.header(["Ord", "Translation", "IPA", "Bestämd", "Exampel"])
     for idx, row in enumerate(rows):
+        if idx % MAX_ROWS_PER_TABLE == 0:
+            # Create a new table for every MAX_ROWS_PER_TABLE rows
+            if table._rows:
+                tables.append(table.draw())
+            table = texttable.Texttable()
+            table.header(["Ord", "Translation", "IPA", "Bestämd", "Exampel"])
         if row:
             row[0] = verify_swedish_word(row[0].strip())
             # Get the value of the first cell
@@ -94,7 +116,9 @@ def markdown_to_ascii(rows):
             mp3_files.append(discord.File(create_audio(first_cell)))
         else:
             table.add_row([])
-    return table.draw(), mp3_files
+    if table._rows:
+        tables.append(table.draw())
+    return tables, mp3_files
 
 def get_swedish_sentence(word):
     try:
