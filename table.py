@@ -74,15 +74,15 @@ async def process_message(message):
                 await thread.send('```\n' + table + '```')
             # Send mp3 files
             print('Sending audios')
-            """
+
             for mp3_file in mp3_files:
                 try:
                     await thread.send(file=mp3_file)
-                except:
-                    print('fail to send file' + mp3_file.filename)
+                except Exception as e:
+                    print('fail to send file' + mp3_file.filename + str(e))
                 finally:
                     os.remove(mp3_file.filename)
-            """
+
         except Exception as e:
             print("Something went wrong " + str(message.id) + str(e) )
     await bot.process_commands(message)
