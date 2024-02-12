@@ -20,6 +20,7 @@ ELEVENLABS_API = os.getenv("ELEVENLABS_API")
 #openai.api_key = CHAT_GPT_API
 openai = OpenAI(api_key=CHAT_GPT_API)
 #client = ElevenLabs(api_key=ELEVENLABS_API)
+set_api_key(ELEVENLABS_API)
 # Prefix for bot commands
 #bot = commands.Bot(command_prefix='/')
 #bot = discord.Client(intents=discord.Intents.default())
