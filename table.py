@@ -105,10 +105,11 @@ def markdown_to_ascii(rows):
                 row.append(get_swedish_translation(first_cell))
             row.append(get_IPA_presentation(first_cell))
             row.append(get_swedish_bestamd(first_cell))
-            row.append(get_swedish_sentence(first_cell))
+            sentence = get_swedish_sentence(first_cell)
+            row.append(sentence)
             table.add_row([cell.strip() for cell in row])
             
-            mp3_files.append(discord.File(create_audio(first_cell)))
+            mp3_files.append(discord.File(create_audio(first_cell, sentence.split('.')[0])))
         else:
             table.add_row([])
     if table._rows:
@@ -210,10 +211,14 @@ def get_IPA_presentation(word):
         print(f"An error occurred: {str(e)}")
         return ""
 
-def create_audio(word):
+def create_audio(word, sentence):
     tts_sv = gTTS(word, lang='sv')
-    tts_sv.save(f'{word}.mp3')
+    #tts_sv.save(f'{word}.mp3')
+    tts_sentence = gTTS(sentence, lang='sv')
+    
+    with open(f'{word}.mp3', 'wb') as f:
+        tts_sv.write_to_fp(f)
+        tts_sentence.write_to_fp(f)
     return word+'.mp3'
-
 bot.run(DISCORD_TOKEN)
 
