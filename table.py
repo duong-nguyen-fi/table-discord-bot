@@ -6,9 +6,7 @@ import os
 from openai import OpenAI
 # IMPORT LOAD_DOTENV FUNCTION FROM DOTENV MODULE.
 from dotenv import load_dotenv
-
-from elevenlabs import generate, play, set_api_key, save
-#from elevenlabs.client import ElevenLabs
+from gtts import gTTS
 
 # LOADS THE .ENV FILE THAT RESIDES ON THE SAME LEVEL AS THE SCRIPT.
 load_dotenv()
@@ -16,11 +14,9 @@ load_dotenv()
 # GRAB THE API TOKEN FROM THE .ENV FILE.
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 CHAT_GPT_API = os.getenv("CHAT_GPT_API")
-ELEVENLABS_API = os.getenv("ELEVENLABS_API")
-#openai.api_key = CHAT_GPT_API
+
 openai = OpenAI(api_key=CHAT_GPT_API)
-#client = ElevenLabs(api_key=ELEVENLABS_API)
-set_api_key(ELEVENLABS_API)
+
 # Prefix for bot commands
 #bot = commands.Bot(command_prefix='/')
 #bot = discord.Client(intents=discord.Intents.default())
@@ -215,12 +211,8 @@ def get_IPA_presentation(word):
         return ""
 
 def create_audio(word):
-    voice = generate(
-    text=word,
-    voice="Bella",
-    model="eleven_multilingual_v2"
-    )
-    save(voice,f'{word}.mp3')
+    tts_sv = gTTS(word, lang='sv')
+    tts_sv.save(f'{word}.mp3')
     return word+'.mp3'
 
 bot.run(DISCORD_TOKEN)
