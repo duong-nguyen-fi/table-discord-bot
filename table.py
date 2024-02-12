@@ -105,13 +105,15 @@ def markdown_to_ascii(rows):
             if len(row) == 1:
                 row.append(get_swedish_translation(first_cell))
             row.append(get_IPA_presentation(first_cell))
-            row.append(get_swedish_bestamd(first_cell))
-            row.append(get_swedish_plural(first_cell))
+            bestamd = get_swedish_bestamd(first_cell)
+            row.append(bestamd)
+            plural = get_swedish_plural(first_cell)
+            row.append(plural)
             sentence = get_swedish_sentence(first_cell)
             row.append(sentence)
             table.add_row([cell.strip() for cell in row])
             
-            mp3_files.append(discord.File(create_audio(first_cell, sentence.split('.')[0])))
+            mp3_files.append(discord.File(create_audio(first_cell, bestamd, plural, sentence.split('.')[0])))
         else:
             table.add_row([])
     if table._rows:
@@ -232,13 +234,17 @@ def get_IPA_presentation(word):
         print(f"An error occurred: {str(e)}")
         return ""
 
-def create_audio(word, sentence):
+def create_audio(word, bestamd, plural, sentence):
     tts_sv = gTTS(word, lang='sv')
+    tts_plural = gTTS(plural, lang='sv')
+    tts_bestamd = gTTS(bestamd, lang='sv')
     #tts_sv.save(f'{word}.mp3')
     tts_sentence = gTTS(sentence, lang='sv')
     
     with open(f'{word}.mp3', 'wb') as f:
         tts_sv.write_to_fp(f)
+        tts_bestamd.write_to_fp(f)
+        tts_plural.write_to_fp(f)
         tts_sentence.write_to_fp(f)
     return word+'.mp3'
 bot.run(DISCORD_TOKEN)
