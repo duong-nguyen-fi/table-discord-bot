@@ -95,9 +95,6 @@ def markdown_to_ascii(rows):
     table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
     table.set_deco(table.HEADER  | texttable.Texttable.HLINES)
     for idx, row in enumerate(rows):
-        if idx == 0:
-            # Skip the first row if it's the header row
-            continue
         if idx % MAX_ROWS_PER_TABLE == 0:
             # Create a new table for every MAX_ROWS_PER_TABLE rows
             if table._rows:
