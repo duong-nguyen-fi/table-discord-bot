@@ -10,8 +10,8 @@ It use CHATGPT to:
 - Create **bestämp** form of the word
 - Create a short example usage of the word in a sentence
 
-It use Elevenlabs API to:
-- Create a pronuncation of the word in Swedish
+It use gTTS to:
+- Create a pronuncation of the word and the example sentence in Swedish
 - Save the audio before sending to Discord
 ## Features
 - Parses Markdown tables from user messages
@@ -31,7 +31,6 @@ It use Elevenlabs API to:
     ```
 3. Set the following environment variables
     ```sh
-       export ELEVENLABS_API=''
        export DISCORD_TOKEN=''
        export CHAT_GPT_API=''
     ```    
