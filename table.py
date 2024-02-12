@@ -74,6 +74,7 @@ async def process_message(message):
                 await thread.send('```\n' + table + '```')
             # Send mp3 files
             print('Sending audios')
+            """
             for mp3_file in mp3_files:
                 try:
                     await thread.send(file=mp3_file)
@@ -81,8 +82,9 @@ async def process_message(message):
                     print('fail to send file' + mp3_file.filename)
                 finally:
                     os.remove(mp3_file.filename)
-        except:
-            print("Something went wrong " + str(message.id))
+            """
+        except Exception as e:
+            print("Something went wrong " + str(message.id) + str(e) )
     await bot.process_commands(message)
 
 def markdown_to_ascii(rows):
@@ -91,20 +93,26 @@ def markdown_to_ascii(rows):
     tables = []
     table = texttable.Texttable()
     table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
+    table.set_deco(table.HEADER  | texttable.Texttable.HLINES)
     for idx, row in enumerate(rows):
+        if idx == 0:
+            # Skip the first row if it's the header row
+            continue
         if idx % MAX_ROWS_PER_TABLE == 0:
             # Create a new table for every MAX_ROWS_PER_TABLE rows
             if table._rows:
                 tables.append(table.draw())
             table = texttable.Texttable()
-            table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
+            table.set_deco( texttable.Texttable.HLINES)
+            #table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
         if row:
             row[0] = verify_swedish_word(row[0].strip())
             # Get the value of the first cell
             first_cell = row[0].strip()
+            print(row)
             if len(row) == 1:
                 row.append(get_swedish_translation(first_cell))
-            row.append(get_IPA_presentation(first_cell))
+            row.append(f'/{get_IPA_presentation(first_cell)}/')
             bestamd = get_swedish_bestamd(first_cell)
             row.append(bestamd)
             plural = get_swedish_plural(first_cell)
