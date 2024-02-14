@@ -47,16 +47,20 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    # Check if the edited message starts with '/table'
-    await process_message(message)
-
-async def process_message(message):
     # Ignore messages from the bot itself
     if message.author == bot.user:
         return
-
-    # Check if the message starts with '/table'
+    # Check if the edited message starts with '/table'
+        # Check if the message starts with '/table'
+    if message.content.startswith(f'/{COMMAND_STRING}-ask'):
+        await process_message_ask(message)
+        return
     if message.content.startswith(f'/{COMMAND_STRING}'):
+        await process_message(message)
+
+
+async def process_message(message):
+
         # Extract the content after '/table'
         content = message.content[len(f'/{COMMAND_STRING}'):].strip()
         print("Message received from " + str(message.author) + ' id='+ str(message.id) + ' channel=' + str(message.guild))
@@ -88,7 +92,20 @@ async def process_message(message):
         except Exception as e:
             print("Something went wrong " + str(message.id) + str(e) )
         
-    await bot.process_commands(message)
+        await bot.process_commands(message)
+
+async def process_message_ask(message):
+        content = message.content[len(f'/{COMMAND_STRING}-ask'):].strip()
+        print("A custom prompt received from " + str(message.author) + ' id='+ str(message.id) + ' channel=' + str(message.guild))
+        thread = await message.create_thread(name="custom_prompt")
+
+        try:
+            await thread.send('```\n' + send_custom_prompt(content) + '```')
+        except Exception as e:
+            print("Something went wrong " + str(message.id) + str(e) )
+        
+        await bot.process_commands(message)
+
 
 def markdown_to_ascii(rows):
     # Convert Markdown table to ASCII table
@@ -158,7 +175,26 @@ def send_gpt_prompt(word, option):
         print(f"An error occurred: {str(e)}")
         return ""
 
+def send_custom_prompt(prompt):
 
+    prompt += ". Ensure that your answer is grammarly correct in Swedish."
+
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo-0125",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish. Please explain like i'm 5 and make it short. Make sure the response is less than 2000 characters" },
+                {"role": "user", "content": prompt}
+            ]
+        )
+        if response:
+            #return response['choices'][0]['message']['content'].strip()
+            return response.choices[0].message.content.strip()
+        else:
+            return "Sorry, I couldn't generate a response"
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return ""
 
 def create_audio(word, bestamd, plural, sentence):
     tts_sv = gTTS(word, lang='sv')
