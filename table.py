@@ -15,6 +15,8 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 CHAT_GPT_API = os.getenv("CHAT_GPT_API")
 COMMAND_STRING = os.getenv("COMMAND_STRING")
+MAX_ROWS_PER_TABLE = int(os.getenv("MAX_ROWS_PER_TABLE"))
+
 
 openai = OpenAI(api_key=CHAT_GPT_API)
 
@@ -26,8 +28,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="<" , intents=intents)
 
 
-# Maximum rows per table
-MAX_ROWS_PER_TABLE = int(os.getenv("MAX_ROWS_PER_TABLE"))
+
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
@@ -107,18 +108,18 @@ def markdown_to_ascii(rows):
                 table.set_deco( table.HEADER  |  table.HLINES)
             #table.header(["Ord", "Translation", "IPA", "Bestämd", "Plural", "Exampel"])
         if row:
-            row[0] = verify_swedish_word(row[0].strip())
+            row[0] = send_gpt_prompt(row[0].strip(), "prefix")
             # Get the value of the first cell
             first_cell = row[0].strip()
             print(row)
             if len(row) == 1:
-                row.append(get_swedish_translation(first_cell))
-            row.append(f'/{get_IPA_presentation(first_cell)}/')
-            bestamd = get_swedish_bestamd(first_cell)
+                row.append(send_gpt_prompt(first_cell, "translate"))
+            row.append(f'/{send_gpt_prompt(first_cell, "ipa")}/')
+            bestamd = send_gpt_prompt(first_cell, "bestamd")
             row.append(bestamd)
-            plural = get_swedish_plural(first_cell)
+            plural = send_gpt_prompt(first_cell, "plural")
             row.append(plural)
-            sentence = get_swedish_sentence(first_cell)
+            sentence = send_gpt_prompt(first_cell, "example")
             row.append(sentence)
             table.add_row([cell.strip() for cell in row])
             
@@ -129,9 +130,18 @@ def markdown_to_ascii(rows):
         tables.append(s)
     return tables, mp3_files
 
-def get_swedish_sentence(word):
+def send_gpt_prompt(word, option):
+    prompts = dict()
+    prompts["example"] = f"Use this word '{word}' in Swedish,  in a very simple and short sentence must be less than 20 word. It must be grammarly correct in Swedish. And translate it in parenthesises"
+    prompts["bestamd"] = f"What is Bestämd form of the word '{word}' in Swedish, give short straightforward 1,2 word answer, remove all quote, dot, comma characters"
+    prompts["plural"] = f"What is plural form of the word '{word}' in Swedish. Make sure the answer is in Swedish, correct spelling.  Give short answer only, remove all quote, dot, comma characters"
+    prompts["translate"] = f"What is translation of this Swedish word '{word}' in English, give short straightforward 1,2 word answer, remove all quote, dot characters"
+    prompts["prefix"] = f"Use this Swedish word '{word}'  Correct the word if there is speeling mistake. it must be grammarly correct in Swedish, if you were to say 'a {word}' or 'an {word}' \
+               in a dictionary, print out the word with correct 'ett' or 'en' form without additional context (only 2 words), for example 'ett öga'. remove all quote, dot, comma characters. All lowercase"
+    prompts["ipa"] = f"what is IPA presentatio of this Swedish word '{word}' . Short answer only. Remove all quote characters. All lowercase"
+
     try:
-        prompt = f"Use this word '{word}' in Swedish,  in a very simple sentence must be less than 20 word. It must be grammarly correct in Swedish. And translate it in parenthesises"
+        prompt = prompts.get(option)
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-0125",
             messages=[
@@ -148,100 +158,7 @@ def get_swedish_sentence(word):
         print(f"An error occurred: {str(e)}")
         return ""
 
-def get_swedish_bestamd(word):
-    try:
-        prompt = f"What is Bestämd form of the word '{word}' in Swedish, give short straightforward 1,2 word answer, remove all quote characters"
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        if response:
-            #return response['choices'][0]['message']['content'].strip()
-            return response.choices[0].message.content.strip()
-        else:
-            return "Error"
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return ""
 
-def get_swedish_plural(word):
-    try:
-        prompt = f"What is plural form of the word '{word}' in Swedish, give short straightforward 1,2 word answer, remove all quote characters"
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        if response:
-            #return response['choices'][0]['message']['content'].strip()
-            return response.choices[0].message.content.strip()
-        else:
-            return "Error"
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return ""
-
-def get_swedish_translation(word):
-    try:
-        prompt = f"What is translation of this Swedish word '{word}' in English, give short straightforward 1,2 word answer, remove all quote characters"
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        if response:
-            #return response['choices'][0]['message']['content'].strip()
-            return response.choices[0].message.content.strip()
-        else:
-            return "Error"
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return ""
-        
-def verify_swedish_word(word):
-    try:
-        prompt = f"Use this Swedish word '{word}'  Correct the word if there is speeling mistake. it must be grammarly correct in Swedish, if you were to say '1 {word}' in a word, print out the word with correct 'ett' or 'en' form without additional context (only 2 words), for example 'ett öga'. Remove all non-alphanumeric characters. All lowercase"
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        if response:
-            #return response['choices'][0]['message']['content'].strip()
-            return response.choices[0].message.content.strip()
-        else:
-            return "Error"
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return ""
-
-def get_IPA_presentation(word):
-    try:
-        prompt = f"what is IPA presentatio of this Swedish word '{word}' . Short answer only. Remove all quote characters. All lowercase"
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that helps beginner user learn Swedish."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        if response:
-            #return response['choices'][0]['message']['content'].strip()
-            return response.choices[0].message.content.strip()
-        else:
-            return "Error"
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return ""
 
 def create_audio(word, bestamd, plural, sentence):
     tts_sv = gTTS(word, lang='sv')
